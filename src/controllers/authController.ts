@@ -109,13 +109,6 @@ export const signUp = async (req: Request, res: Response): Promise<any> => {
         message: "Mật khẩu phải có ít nhất một ký tự đặc biệt, ví dụ @ hoặc !.",
       });
     }
-    if (!isEmailDeliveryConfigured()) {
-      return res.status(503).json({
-        code: "EMAIL_NOT_CONFIGURED",
-        message:
-          "Máy chủ chưa được cấu hình gửi email xác minh. Vui lòng liên hệ quản trị viên.",
-      });
-    }
     const duplicate = await User.findOne({
       $or: [{ username: normalizedUsername }, { email: normalizedEmail }],
     });
@@ -133,40 +126,21 @@ export const signUp = async (req: Request, res: Response): Promise<any> => {
     const hashedPassword = await bcrypt.hash(normalizedPassword, 10); // salt = 10
 
     // tạo user mới
-    const verification = createOneTimeToken();
     const user = await User.create({
       username: normalizedUsername,
       hashedPassword,
       email: normalizedEmail,
       displayName: `${lastName} ${firstName}`,
-      emailVerificationRequired: true,
-      emailVerificationTokenHash: verification.hash,
-      emailVerificationExpiresAt: new Date(
-        Date.now() + EMAIL_VERIFICATION_TTL_MS
-      ),
+      emailVerificationRequired: false,
+      emailVerificationTokenHash: undefined,
+      emailVerificationExpiresAt: undefined
     });
 
-    try {
-      await sendVerificationEmail({
-        to: user.email,
-        displayName: user.displayName,
-        token: verification.token,
-      });
-    } catch (error) {
-      console.error("Không thể gửi email xác minh", error);
-      return res.status(202).json({
-        emailSent: false,
-        email: user.email,
-        message:
-          "Tài khoản đã được tạo nhưng chưa gửi được email xác minh. Hãy dùng chức năng gửi lại email xác minh.",
-      });
-    }
 
     return res.status(201).json({
-      emailSent: true,
       email: user.email,
       message:
-        "Đăng ký thành công. Vui lòng mở email và nhấn liên kết xác minh trước khi đăng nhập.",
+        "Đăng ký thành công.",
     });
   } catch (error) {
     console.error("Lỗi khi gọi signUp", error);
@@ -190,14 +164,6 @@ export const signIn = async (req: Request, res: Response): Promise<any> => {
       return res
         .status(401)
         .json({ message: "username hoặc password không chính xác" });
-    }
-
-    if (user.emailVerificationRequired) {
-      return res.status(403).json({
-        code: "EMAIL_NOT_VERIFIED",
-        message:
-          "Email chưa được xác minh. Vui lòng mở email xác minh hoặc yêu cầu gửi lại liên kết.",
-      });
     }
 
     if (!user.hashedPassword && user.googleId) {
