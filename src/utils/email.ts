@@ -18,18 +18,12 @@ function mailTransport() {
     host: config.SMTP_HOST,
     port: config.SMTP_PORT,
     secure: config.SMTP_SECURE,
+    family: 4,
     auth: {
       user: config.SMTP_USER,
       pass: config.SMTP_PASS,
     },
   });
-  transporter.verify()
-    .then(() => {
-      console.log("✅ SMTP connection successful");
-    })
-    .catch((error) => {
-      console.error("❌ SMTP connection failed:", error);
-    });
   return transporter;
 }
 
