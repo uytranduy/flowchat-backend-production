@@ -1,6 +1,8 @@
 import nodemailer from "nodemailer";
 import { config } from "../config/index.js";
+import dns from "node:dns";
 
+dns.setDefaultResultOrder("ipv4first");
 let transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
 
 export function isEmailDeliveryConfigured(): boolean {
