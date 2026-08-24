@@ -18,7 +18,6 @@ function mailTransport() {
     host: config.SMTP_HOST,
     port: config.SMTP_PORT,
     secure: config.SMTP_SECURE,
-    family: 4,
     auth: {
       user: config.SMTP_USER,
       pass: config.SMTP_PASS,
@@ -26,7 +25,6 @@ function mailTransport() {
   });
   return transporter;
 }
-
 function escapeHtml(value: string): string {
   return value.replace(/[&<>'"]/g, (character) => {
     const entities: Record<string, string> = {
