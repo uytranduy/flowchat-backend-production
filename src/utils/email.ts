@@ -23,6 +23,13 @@ function mailTransport() {
       pass: config.SMTP_PASS,
     },
   });
+  transporter.verify()
+    .then(() => {
+      console.log("✅ SMTP connection successful");
+    })
+    .catch((error) => {
+      console.error("❌ SMTP connection failed:", error);
+    });
   return transporter;
 }
 
